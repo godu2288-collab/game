@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>☢️ Пепел Байкала</title>
+
+  <!-- Старинные шрифты -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Marck+Script&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ВКЛАДКИ (декоративные, как на скрине) -->
+    <nav class="tabs" id="top-tabs">
+      <a class="tab active" href="#" onclick="return switchTab(this,'news')">Новости</a>
+      <a class="tab" href="#" onclick="return switchTab(this,'about')">Об игре</a>
+      <a class="tab" href="#" onclick="return switchTab(this,'thanks')">Благодарности</a>
+    </nav>
+
+    <!-- ЭКРАН: ЗАГРУЗКА -->
+    <section id="screen-loading" class="screen active">
+      <div class="loading-wrap">
+        <div class="loading-title">☢️ ПЕПЕЛ БАЙКАЛА</div>
+        <div class="loading-sub">2087. Иркутск. Ты один из тех, кто остался.</div>
+        <div class="loading-bar"><div id="loading-fill" class="loading-fill"></div></div>
+        <div id="loading-status" class="loading-status">Загрузка...</div>
+        <button id="loading-start" class="primary" style="display:none" onclick="startGame()">▶️ Начать</button>
+      </div>
+    </section>
+
+    <!-- ЭКРАН: ИСТОРИЯ -->
+    <section id="screen-story" class="screen">
+      <div class="story-text" id="story-text"></div>
+      <div class="story-nav" id="story-nav"></div>
+    </section>
+
+    <!-- ЭКРАН: СОЗДАНИЕ ГЕРОЯ — ИМЯ -->
+    <section id="screen-create-name" class="screen">
+      <h2>Как зовут твоего героя?</h2>
+      <p class="sub">Имя от 2 до 16 символов</p>
+      <input id="create-name-input" maxlength="16" placeholder="Имя">
+      <p id="create-name-error" class="error"></p>
+      <button class="primary" onclick="submitName()">Далее ▶️</button>
+    </section>
+
+    <!-- ЭКРАН: СОЗДАНИЕ ГЕРОЯ — КЛАСС -->
+    <section id="screen-create-class" class="screen">
+      <h2 id="create-class-title">Выбери своё ремесло</h2>
+      <div id="class-list" class="class-list"></div>
+    </section>
+
+    <!-- ЭКРАН: МЕНЮ (двухколоночный) -->
+    <section id="screen-menu" class="screen screen--split">
+      <div class="main-col">
+        <header>
+          <div id="hero-name" class="hero-name">Герой</div>
+          <div id="hero-class" class="hero-class"></div>
+          <div class="stats">
+            <span id="stat-hp">❤️ 0/0</span>
+            <span id="stat-energy">⚡ 0/100</span>
+            <span id="stat-gears">⚙️ 0</span>
+          </div>
+        </header>
+
+        <div id="sleep-banner" class="sleep-banner" style="display:none"></div>
+
+        <!-- Карточка локации -->
+        <div id="location-card" class="location-card">
+          <div class="loc-title">📍 Локация</div>
+          <div class="loc-name" id="loc-name">Разбитый хутор</div>
+          <div class="loc-desc" id="loc-desc">Пыль, руины и запах гари. Здесь пока безопасно.</div>
+        </div>
+
+        <nav class="menu">
+          <button onclick="openHunt()">⚔️ Охота (−5⚡)</button>
+          <button onclick="openInventory()">🎒 Инвентарь</button>
+          <button onclick="openQuests()">📜 Квесты</button>
+          <button onclick="openSleep()">🛏 Спать</button>
+          <button onclick="openHospital()">🏥 Госпиталь</button>
+          <button onclick="openShop()" id="menu-shop-btn" style="display:none">🏪 Магазин «У Михалыча»</button>
+          <button onclick="openProfile()">👤 Профиль</button>
+          <button onclick="toggleMusic()">🎵 Музыка вкл/выкл</button>
+          <button onclick="resetGame()" class="danger">🗑 Сбросить героя</button>
+        </nav>
+      </div>
+
+      <aside class="art-col">
+        <img id="loc-art" class="art" src="assets/art-khutor.jpg" alt="Локация">
+        <div id="loc-art-caption" class="art-caption">Разбитый хутор · 2087</div>
+      </aside>
+    </section>
+
+    <!-- ЭКРАН: ОХОТА -->
+    <section id="screen-hunt" class="screen">
+      <h2>Куда отправимся?</h2>
+      <p class="sub">Охота стоит 5⚡</p>
+      <div id="hunt-list" class="list"></div>
+      <button class="back" onclick="showScreen('menu')">⬅️ Назад</button>
+    </section>
+
+    <!-- ЭКРАН: БОЙ -->
+    <section id="screen-fight" class="screen">
+      <div class="mob-icon" id="mob-icon">🐀</div>
+      <h2 id="fight-mob">⚔️ Бой</h2>
+      <div class="bars">
+        <div class="bar-label">Враг: <span id="mob-hp-text">0/0</span></div>
+        <div class="bar"><div id="mob-hp-bar" class="bar-fill mob"></div></div>
+        <div class="bar-label">Ты: <span id="hero-hp-text">0/0</span></div>
+        <div class="bar"><div id="hero-hp-bar" class="bar-fill hero"></div></div>
+      </div>
+      <div id="fight-log" class="log"></div>
+      <div class="actions" id="fight-actions"></div>
+    </section>
+
+    <!-- ЭКРАН: СЦЕНА (ДИАЛОГ) -->
+    <section id="screen-scene" class="screen">
+      <div class="card scene-text" id="scene-text"></div>
+      <div id="scene-choices" class="list"></div>
+    </section>
+
+    <!-- ЭКРАН: ИНВЕНТАРЬ -->
+    <section id="screen-inventory" class="screen">
+      <h2>🎒 Инвентарь</h2>
+      <div class="eq-panel">
+        <div id="eq-slots" class="eq-slots"></div>
+        <div id="eq-stats" class="eq-stats"></div>
+      </div>
+      <div class="inv-zone">
+        <div id="inv-hint" class="inv-hint"></div>
+        <div id="inventory-grid" class="inv-grid"></div>
+      </div>
+      <button class="back" onclick="showScreen('menu')">⬅️ Назад</button>
+    </section>
+
+    <!-- ЭКРАН: ГОСПИТАЛЬ -->
+    <section id="screen-hospital" class="screen">
+      <h2 id="hospital-title">🏥 Госпиталь</h2>
+      <p id="hospital-desc" class="sub"></p>
+      <div id="hospital-status" class="card"></div>
+      <div id="hospital-list" class="list"></div>
+      <button class="back" onclick="showScreen('menu')">⬅️ Назад</button>
+    </section>
+
+    <!-- ЭКРАН: ПРОФИЛЬ -->
+    <section id="screen-profile" class="screen">
+      <h2>👤 Профиль</h2>
+      <div id="profile-body" class="card"></div>
+      <button class="back" onclick="showScreen('menu')">⬅️ Назад</button>
+    </section>
+
+    <!-- ЭКРАН: КВЕСТЫ -->
+    <section id="screen-quests" class="screen">
+      <h2>📜 Квесты</h2>
+      <div id="quests-list" class="list"></div>
+      <button class="back" onclick="showScreen('menu')">⬅️ Назад</button>
+    </section>
+
+    <!-- ЭКРАН: СОН -->
+    <section id="screen-sleep" class="screen">
+      <h2>🛏 Сон</h2>
+      <div id="sleep-body" class="card"></div>
+      <div id="sleep-actions" class="list"></div>
+      <button class="back" onclick="showScreen('menu')">⬅️ Назад</button>
+    </section>
+
+    <!-- ЭКРАН: МАГАЗИН -->
+    <section id="screen-shop" class="screen">
+      <h2>🏪 Магазин «У Михалыча»</h2>
+      <div id="shop-gears" class="sub"></div>
+      <div id="shop-list" class="list"></div>
+      <button class="back" onclick="showScreen('menu')">⬅️ Назад</button>
+    </section>
+
+    <!-- ДИАЛОГ -->
+    <div id="dialog-overlay" class="dialog-overlay" hidden>
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+        <button id="dialog-x" class="dialog-x" aria-label="Закрыть">✕</button>
+        <div id="dialog-title" class="dialog-title"></div>
+        <div id="dialog-text" class="dialog-text"></div>
+        <div id="dialog-actions" class="dialog-actions"></div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="bg-music" loop preload="auto">
+    <source src="music/theme.mp3" type="audio/mpeg">
+  </audio>
+
+  <script src="data.js"></script>
+  <script src="story.js"></script>
+  <script src="combat.js"></script>
+  <script src="state.js"></script>
+  <script src="ui.js"></script>
+  <script src="dialog.js"></script>
+  <script src="inventory.js"></script>
+  <script src="hospital.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
